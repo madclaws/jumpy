@@ -27,28 +27,86 @@ export default class NewClass extends cc.Component {
     // Acceleration
     @property
     accel: number = 0;
-    // LIFE-CYCLE CALLBACKS:
+  
+    @property({
+      type: cc.AudioClip
+    })
+    private jumpAudio: cc.AudioClip = null;
 
+    private xSpeed: number = 0;
+
+    private accLeft: boolean = false;
+    private accRight: boolean = false;
+
+    // Horizontal velocity
     // onLoad () {}
 
     onLoad() {
       console.log("Player on load");
       const jumpAction = this.runJumpAction();
       cc.tween(this.node).then(jumpAction).start();
-    }
 
+      cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+      cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+      
+    }
+    
     start () {
       
     }
 
+    update (dt) {
+      if (this.accLeft) {
+        this.xSpeed -= this.accel * dt;
+      } 
+
+      if (this.accRight) {
+        this.xSpeed += this.accel * dt; 
+      }
+
+      if (Math.abs(this.xSpeed) > this.maxMoveSpeed) {
+        this.xSpeed = this.maxMoveSpeed * this.xSpeed / Math.abs(this.xSpeed);
+      }
+      this.node.x += this.xSpeed * dt;
+    }
+    
     runJumpAction() {
       const jumpUp = cc.tween().by(this.jumpDuration, {y: this.jumpHeight}, {easing: "sineOut"});
       const jumpDown = cc.tween().by(this.jumpDuration, {y: - this.jumpHeight}, {easing: "sineIn"});
-      const tween = cc.tween().sequence(jumpUp, jumpDown);
+      const tween = cc.tween().sequence(jumpUp, jumpDown).call(this.onJumpfinished.bind(this));
+      // return tween;
       return cc.tween().repeatForever(tween);
     }
 
+    onKeyDown(event): void {
+      switch (event.keyCode) {
+        case cc.macro.KEY.a:
+            this.accLeft = true;
+          break;
+        case cc.macro.KEY.d:
+            this.accRight = true;
+          break;
+      }
+    }
 
+    onKeyUp(event): void {
+      switch (event.keyCode) {
+        case cc.macro.KEY.a:
+            this.accLeft = false;        
+          break;
+        case cc.macro.KEY.d:
+            this.accRight = false;
+          break;
+      }
+    }
 
-    // update (dt) {}
+    private onJumpfinished(): void {
+      cc.audioEngine.playEffect(this.jumpAudio, false);
+    }
+
+    onDestroy(): void {
+      cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+      cc.systemEvent.off(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+    }
+
 }
