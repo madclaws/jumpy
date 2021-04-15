@@ -38,14 +38,16 @@ export default class NewClass extends cc.Component {
     private accLeft: boolean = false;
     private accRight: boolean = false;
 
+    public game: any;
+
+    private jumpAction: cc.Tween;
     // Horizontal velocity
     // onLoad () {}
 
     onLoad() {
       console.log("Player on load");
-      const jumpAction = this.runJumpAction();
-      cc.tween(this.node).then(jumpAction).start();
-
+      this.node.active = false;
+      this.jumpAction = this.runJumpAction();
       cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
       cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
       
@@ -54,8 +56,17 @@ export default class NewClass extends cc.Component {
     start () {
       
     }
+    
+    public onPlayerStart(): void {
+      console.log("Player statat");
+      this.node.active = true;
+      cc.tween(this.node).then(this.jumpAction).start();
+    }
 
     update (dt) {
+      if (!this.game.isGameStart) {
+        return;
+      }
       if (this.accLeft) {
         this.xSpeed -= this.accel * dt;
       } 
@@ -79,6 +90,9 @@ export default class NewClass extends cc.Component {
     }
 
     onKeyDown(event): void {
+      if (!this.game.isGameStart) {
+        return;
+      }
       switch (event.keyCode) {
         case cc.macro.KEY.a:
             this.accLeft = true;
@@ -90,6 +104,9 @@ export default class NewClass extends cc.Component {
     }
 
     onKeyUp(event): void {
+      if (!this.game.isGameStart) {
+        return;
+      }
       switch (event.keyCode) {
         case cc.macro.KEY.a:
             this.accLeft = false;        

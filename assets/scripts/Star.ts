@@ -34,6 +34,9 @@ export default class NewClass extends cc.Component {
     }
 
     update (dt) {
+      if (!this.game.isGameStart) {
+        return;
+      }
       if (this.getDistWithPlayer() < this.pickRadius) {
         this.onPicked();
       }

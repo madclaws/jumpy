@@ -20,6 +20,10 @@ export default class NewClass extends cc.Component {
     })
     private player: cc.Node = null;
 
+    @property({
+      type: cc.Node
+    })
+    private playButton: cc.Node = null;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -50,6 +54,8 @@ export default class NewClass extends cc.Component {
     private timer: number;
     private starDuration: number;
     private isGameover: boolean = false;
+    public isGameStart: boolean = false;
+
     start () {
 
     }
@@ -60,7 +66,19 @@ export default class NewClass extends cc.Component {
       this.starDuration = 0; 
       this.isGameover = false;
       this.groundY = this.ground.y + this.ground.height / 2;
+      this.scoreLabel.node.active = false;
+      this.playButton.on("touchend", this.onGameStart, this);
+      this.player.getComponent("Player").game = this;
+    }
+    
+    private onGameStart(): void {
+      console.log("Pressing play");
+      this.isGameStart = true;
+      this.scoreLabel.node.active = true;
+      this.player.getComponent("Player").onPlayerStart();
       this.spawnNewStar();
+      this.playButton.active = false;
+      this.playButton.off("touchend", this.onGameStart, this);
     }
 
     private spawnNewStar(): void {
@@ -85,6 +103,9 @@ export default class NewClass extends cc.Component {
     }
 
     update (dt) {
+      if (!this.isGameStart) {
+        return;
+      }
       if (this.timer > this.starDuration && !this.isGameover) {
         this.onGameover();
         this.isGameover = true;
@@ -94,6 +115,7 @@ export default class NewClass extends cc.Component {
     }
 
     private onGameover(): void {
+      console.log("gameover");
       this.player.stopAllActions();
       cc.director.loadScene("game");
     }
